@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>首页</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="css/layuiTheme.css" />
+    <style type="text/css">
+      #bodyView {
+        width: 60%;
+        min-width: 819.2px;
+        max-width: 1536px;
+        margin: 0vh auto 10vh;
+        height: 90vh;
+        min-height: 600px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #head {
+        display: flex;
+      }
+
+      #title {
+        font-size: 2.5rem;
+        line-height: 5rem;
+      }
+
+      #content {
+        flex: 1;
+        overflow-y: auto;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+        border-radius: 10px 0 10px 10px;
+        padding: 20px 10px 10px;
+        overflow: hidden;
+      }
+
+      #menu {
+        display: flex;
+        align-self: flex-end;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .menuItem {
+        height: 3rem;
+        line-height: 3rem;
+        padding: 0 2rem;
+        color: #666;
+        transition: all 300ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+
+      .menuItem:hover {
+        background: #ededed;
+      }
+
+      .menuActive {
+        color: #F5222D;
+        position: relative;
+      }
+
+      .menuActive:after {
+        content: "";
+        display: block;
+        background: #F5222D;
+        width: 100%;
+        height: 4px;
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+      }
+      
+      a{
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="js/main.js" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery" charset="utf-8"></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+    <img src="img/bg.jpg" class="background">
+    <div id="bodyView">
+      <div style="text-align: right;line-height: 2em;">
+        您好<span id="name"></span>，<a onclick="logout()">点击退出</a>
+      </div>
+      <div id="head">
+        <div id="title">　捐献申请平台</div>
+        <div style="flex: 1;"></div>
+        <div id="menu">
+          <div class="menuItem menuActive" onclick="switchNav(0)">
+            立即捐献
+          </div>
+          <div class="menuItem" onclick="switchNav(1)">
+            平台公告
+          </div>
+          <div class="menuItem" onclick="switchNav(2)">
+            捐献记录
+          </div>
+          <div class="menuItem" onclick="switchNav(3)">
+            个人信息
+          </div>
+        </div>
+      </div>
+      <div id="content">
+        <iframe src="donate.html" frameborder="0" width="100%" height="100%"></iframe>
+      </div>
+    </div>
+    <script type="text/javascript">
+      var selectNav = 0;
+      var layer = layui.layer;
+      layui.use('layer');
+      
+      $.ajax({
+        url: url + '/user/getUserInfoById/'+sessionStorage.getItem('userId'),
+        contentType: 'application/json',
+        success: function(res) {
+          $('#name').html(res.data.username);
+        },
+      })
+
+      function switchNav(index) {
+        var url = ['./donate.html', './notice.html', './record.html', './information.html'];
+
+        if (index == selectNav) return false;
+        $('.menuItem').eq(selectNav).removeClass('menuActive');
+        $('.menuItem').eq(index).addClass('menuActive');
+        selectNav = index;
+        $('iframe').attr('src', url[index]);
+      }
+
+      function changePsw() {
+        if ($("#oldPsw").val().length < 1 || $("#newPsw1").val().length < 1 || $("#newPsw2").val().length < 1) return false;
+        if ($("#newPsw1").val() == $("#newPsw2").val()) {
+          $.ajax({
+            url: url + '/user/changePassword',
+            method: 'POST',
+            contentType: 'application/json',
+            async: false,
+            data: JSON.stringify({
+              password: $("#oldPsw").val(),
+              newPassword: $("#newPsw1").val(),
+              id: sessionStorage.getItem('userId')
+            }),
+            success: function(res) {
+              if (res.code == 200) {
+                layer.alert('修改成功', {
+                  end: function() {
+                    layer.closeAll();
+                  }
+                })
+              } else {
+                layer.alert(res.msg)
+              }
+            }
+          })
+        } else {
+          layer.alert('两次新密码不一致')
+        }
+      }
+      
+      function logout() {
+        sessionStorage.removeItem('userId');
+        parent.location.href = 'login.html';
+      }
+    </script>
+  </body>
+</html>

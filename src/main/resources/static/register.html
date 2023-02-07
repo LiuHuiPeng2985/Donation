@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>注册</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="css/layuiTheme.css" />
+    <style type="text/css">
+      #title {
+        width: 100%;
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        line-height: 5rem;
+        height: 5rem;
+        letter-spacing: 0.75rem;
+      }
+
+      #contentView {
+        height: calc(100vh - 5rem - 4rem);
+        padding-top: 4rem;
+      }
+
+      #content {
+        width: 30rem;
+        margin: 0 auto;
+        padding: 2rem 0;
+        border-radius: 15px;
+        border: 1px solid #ededed;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+        vertical-align: text-bottom;
+      }
+
+      #head {
+        line-height: 4rem;
+        height: 4rem;
+        font-size: 1.5rem;
+        text-align: center;
+      }
+
+      .layui-input-inline {
+        width: auto !important;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="js/main.js" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery" charset="utf-8"></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+    <script src="js/addressSelect.js" charset="utf-8"></script>
+    <img src="img/bg.jpg" class="background">
+    <div id="title">捐献管理平台</div>
+    <div id="contentView">
+      <div id="content">
+        <div id="head" style="flex-basis: 100%;">注册</div>
+        <form class="layui-form" action="" lay-filter="data">
+
+          <div class="layui-form-item">
+            <div class="layui-input-inline">
+              <label class="layui-form-label">姓名：</label>
+              <div class="layui-input-block">
+                <input type="text" name="username" lay-verify="required|name" autocomplete="off" class="layui-input"
+                  style="width: 6em;" placeholder="仅限中文">
+              </div>
+            </div>
+            <div class="layui-input-inline">
+              <label class="layui-form-label">性别：</label>
+              <div class="layui-input-block" style="width: 6em !important;">
+                <select name="sex">
+                  <option value="1">男</option>
+                  <option value="0">女</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <div class="layui-input-inline">
+              <label class="layui-form-label">年龄：</label>
+              <div class="layui-input-block">
+                <input type="text" name="age" lay-verify="required|number" autocomplete="off" class="layui-input" style="width: 3em;">
+              </div>
+            </div>
+            <div class="layui-input-inline">
+              <label class="layui-form-label">邮箱：</label>
+              <div class="layui-input-block">
+                <input type="text" name="email" lay-verify="email|required" autocomplete="off" class="layui-input"
+                  style="width: 10em;" placeholder="请输入邮箱">
+              </div>
+            </div>
+          </div>
+
+          <div class="layui-form-item" style="padding-right: 55px;">
+            <div class="layui-inline">
+              <label class="layui-form-label">住址：</label>
+              <div class="layui-input-inline" style="width: 7em !important;">
+                <select name="province" id="province" lay-verify="required" lay-search lay-filter="province">
+                  <option value="">选择省份</option>
+                </select>
+              </div>
+              <div class="layui-input-inline" style="width: 11em !important;">
+                <select name="city" id="city">
+                  <option value="">请先选择省份</option>
+                </select>
+              </div>
+            </div>
+            <label class="layui-form-label">　　　</label>
+            <div class="layui-input-block">
+              <textarea placeholder="请输入详细地址" class="layui-textarea" name="local" lay-verify="required" style="height: 54px;min-height: 0;"></textarea>
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-block">
+              <label class="layui-form-label">手机号：</label>
+              <div class="layui-input-inline">
+                <input type="tel" name="telephone" lay-verify="required|phone" autocomplete="off" class="layui-input"
+                  placeholder="请输入手机号">
+              </div>
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-input-inline">
+              <label class="layui-form-label">密码:</label>
+              <div class="layui-input-block">
+                <input type="password" id="psw" lay-verify="required|psw" placeholder="请输入密码" autocomplete="off" class="layui-input"
+                  style="width: 7em !important;">
+              </div>
+            </div>
+            <div class="layui-input-inline">
+              <label class="layui-form-label">确认密码:</label>
+              <div class="layui-input-block">
+                <input type="password" name="password" lay-verify="required|verifyPsw" placeholder="再次输入密码"
+                  autocomplete="off" class="layui-input" style="width: 8em !important;">
+              </div>
+            </div>
+          </div>
+          <div class="layui-form-item" style="text-align: center;">
+            <div class="layui-input-block" style="margin-left: 0;">
+              <button type="submit" class="layui-btn" lay-submit="">立即注册</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script type="text/javascript">
+      for (var i = 0; i < addressSelect.length; i++) {
+        $("#province").append("<option value='" + i + "'>" + addressSelect[i].name + "</option>");
+      }
+
+      layui.use(['layer', 'form'], function() {
+        var layer = layui.layer;
+        var form = layui.form;
+
+        form.verify({
+          name: [
+            /^[\u4e00-\u9fa5]{0,}$/,
+            '姓名只能为中文字符'
+          ],
+          psw: [
+            /^[\S]{6,16}$/,
+            '密码必须6到16位，且不能出现空格'
+          ],
+          verifyPsw: function(value) {
+            if (value != $("#psw").val()) return '两次密码不一致'
+          }
+        });
+
+        form.on('select(province)', function(data) {
+          if (data.value.length < 0) return false;
+          $("#city").empty();
+          for (var i = 0; i < addressSelect[data.value].city.length; i++) {
+            $("#city").append("<option value='" + i + "'>" + addressSelect[data.value].city[i].name +
+              "</option>");
+          }
+          form.render('select');
+        });
+
+        form.on('submit', function(data) {
+          console.log("校验通过，准备提交");
+          var data = form.val("data");
+          console.log(data);
+          data.city = addressSelect[data.province].city[data.city].name;
+          data.province = addressSelect[data.province].name;
+          $.ajax({
+            url: url + '/user/register',
+            method: 'POST',
+            contentType: 'application/json',
+            async: false,
+            data: JSON.stringify(data),
+            success: function(res) {
+              layer.alert(res.msg, {
+                end: function() {
+                  if (res.code == 200) location.href = 'login.html';
+                }
+              })
+            }
+          })
+          return false;
+        })
+      })
+    </script>
+  </body>
+</html>

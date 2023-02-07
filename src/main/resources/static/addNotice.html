@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>新增公告</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="css/layuiAdminTheme.css" />
+    <style type="text/css">
+
+    </style>
+  </head>
+  <body>
+    <script src="js/main.js" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery" charset="utf-8"></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+
+    <form class="layui-form" action="" lay-filter="data">
+      <div class="layui-form-item">
+          <label class="layui-form-label">公告标题：</label>
+        <div class="layui-input-block">
+          <input type="text" name="title" lay-verify="required" autocomplete="" class="layui-input" style=""
+            placeholder="请输入公告标题">
+        </div>
+      </div>
+      <div class="layui-form-item">
+          <label class="layui-form-label">公告内容：</label>
+        <div class="layui-input-block">
+          <textarea placeholder="请输入公告内容" class="layui-textarea" name="noticeText" lay-verify="required" maxlength="255"></textarea>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <button type="button" class="layui-btn" lay-submit=''>新增公告</button>
+      </div>
+    </form>
+
+    <script type="text/javascript">
+      var form = null;
+      
+      layui.use('form', function() {
+        form = layui.form;
+
+        form.on('submit', function() {
+
+          $.ajax({
+            url: url + '/notice/saveOrUpdate',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(form.val('data')),
+            success: function(res) {
+              parent.layer.alert(res.msg);
+              if (res.code == 200) parent.switchNav(0);
+            }
+          })
+        })
+      })
+    </script>
+  </body>
+</html>

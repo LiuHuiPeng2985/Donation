@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>登录</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <style type="text/css">
+      #title {
+        width: 100%;
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        line-height: 5rem;
+        height: 5rem;
+        letter-spacing: 0.75rem;
+      }
+
+      #contentView {
+        height: calc(100vh - 5rem - 4rem);
+        padding-top: 4rem;
+      }
+
+      #content {
+        width: fit-content;
+        margin: 0 auto;
+        padding: 2rem 0;
+        border-radius: 15px;
+        border: 1px solid #ededed;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+        vertical-align: text-bottom;
+      }
+
+      #head {
+        line-height: 4rem;
+        height: 4rem;
+        font-size: 1.5rem;
+        text-align: center;
+      }
+
+      a {
+        font-size: 0.75rem;
+        position: relative;
+        top: -10px;
+      }
+
+      .layui-form-item {
+        padding-right: 50px;
+      }
+    </style>
+    <link rel="stylesheet" type="text/css" href="css/layuiTheme.css" />
+  </head>
+  <body>
+    <script src="js/main.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery" charset="utf-8"></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+    <img src="img/bg.jpg" class="background">
+    <div id="title"> 捐献管理平台</div>
+    <div id="contentView">
+      <div id="content">
+        <div id="head" style="flex-basis: 100%;">登录</div>
+        <div class="layui-form-item">
+          <div class="layui-block">
+            <label class="layui-form-label">手机号：</label>
+            <div class="layui-input-block">
+              <input type="tel" id="phone" lay-verify="required|phone" autocomplete="off" class="layui-input"
+                placeholder="请输入手机号">
+            </div>
+          </div>
+        </div>
+        <div style="padding-right: 50px;text-align: right;">
+          <a href="register.html">没有帐号？点击注册</a>
+        </div>
+        <div class="layui-form-item">
+          <div class="layui-block">
+            <label class="layui-form-label">密码：</label>
+            <div class="layui-input-block">
+              <input type="password" id="psw" lay-verify="required" placeholder="请输入密码" autocomplete="off" class="layui-input">
+            </div>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <div class="layui-block">
+            <label class="layui-form-label">验证码：</label>
+            <div class="layui-input-inline" style="margin-right: 0;">
+              <input type="text" id="captcha" lay-verify="required" placeholder="输入下方验证码" autocomplete="off" class="layui-input">
+              <img id="captchaImg" src="" style="width: 100%;" onclick="reloadCaptcha()">
+            </div>
+          </div>
+        </div>
+        <div class="layui-form-item" style="text-align: center;">
+          <div class="layui-input-block" style="margin-left: 40px;">
+            <button type="submit" class="layui-btn" onclick="login()">登录</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      var layer;
+	  layui.use('layer', function(){
+		layer = layui.layer
+	  })
+      reloadCaptcha();
+      
+      function login() {
+        $.ajax({
+          url: url + '/user/login',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            telephone: $('#phone').val(),
+            password: $('#psw').val(),
+            captcha: $('#captcha').val()
+          }),
+          success: function(res) {
+            console.log(res);
+            if (res.code != 200) {
+              layer.alert(res.msg);
+              reloadCaptcha();
+            } else {
+              sessionStorage.setItem('userId',res.data.userId)
+              if (res.data.isAdmin) {
+                location.href = 'adminIndex.html';
+              } else {
+                location.href = 'userIndex.html';
+              }
+            }
+          }
+        })
+      }
+
+      function reloadCaptcha() {
+        $.ajax({
+          url: url + '/user/captcha.jpg',
+          // 把接收到的图片转成二进制
+          xhr: function() {
+            var xhr = new XMLHttpRequest()
+            xhr.responseType = 'blob'
+            return xhr
+          },
+          success: function(res) {
+            var img = document.getElementById('captchaImg');
+            var url = window.URL || window.webkitURL;
+            img.src = url.createObjectURL(res);
+          }
+        })
+      }
+    </script>
+  </body>
+</html>

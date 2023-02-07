@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>查看项目</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="css/layuiAdminTheme.css" />
+    <style type="text/css">
+      .organizeName,
+      .operation span:first-of-type {
+        color: #1990FF;
+      }
+
+      .operation span:last-of-type {
+        color: #F5222D;
+      }
+
+      .pageNav {
+        margin: 0 auto;
+        width: fit-content;
+      }
+
+      .pageNav a,
+      .operation span {
+        cursor: pointer;
+        display: inline-block;
+      }
+
+      cite {
+        cursor: default;
+      }
+
+      .twoRow {
+        text-overflow: -o-ellipsis-lastline;
+        overflow: hidden;
+        word-break: break-all;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .layui-table tr td:nth-of-type(3) {
+        min-width: 5em;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="js/main.js" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery" charset="utf-8"></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+
+    <form class="layui-form" action="" lay-filter="data">
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label" style="width: auto !important;">搜索：</label>
+          <input type="text" name="projectName" class="layui-input" style="width: 14em;" placeholder="项目名称" value="">
+        </div>
+        <div class="layui-inline" style="width: 10em !important;">
+          <select name="projectStatus">
+            <option value="">全部项目状态</option>
+            <option value="0">筹集中</option>
+            <option value="1">筹集结束</option>
+          </select>
+        </div>
+        <div class="layui-inline">
+          <input type="text" name="displayLength" class="layui-input" style="display: none;" placeholder="每页页数" value="10">
+          <button type="submit" class="layui-btn" lay-submit="" lay-filter="searchBtn">查询项目</button>
+        </div>
+      </div>
+    </form>
+
+    <table class="layui-table" lay-skin="line">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="select" onclick="selectAll()" /></th>
+          <th>ID</th>
+          <th>项目名称</th>
+          <th>项目状态</th>
+          <th>项目负责人</th>
+          <th>所属单位</th>
+          <th>开始时间</th>
+          <th>结束时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div style="display: flex;">
+      <button type="button" class="layui-btn layui-btn-xs" style="background: #F5222D;" onclick="deleteProject()">批量删除</button>
+      <div style="flex: 1">
+        <div class="pageNav">
+          <span class="layui-breadcrumb" lay-separator="-">
+            <a class="fristPage">首页</a>
+            <a class="lastPage">上一页</a>
+            <a><cite>第<span id="page"></span>页</cite></a>
+            <a class="nextPage">下一页</a>
+            <a class="endPage">尾页</a>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      var displayStart = 1;
+      var endPage = null;
+      var layer = layui.layer;
+      var laydate = null;
+      var form = null;
+      var list = null;
+
+      layui.use(['form', 'element', 'laydate'], function() {
+        form = layui.form;
+        laydate = layui.laydate;
+
+        search(1);
+
+        form.on('submit(searchBtn)', function() {
+          search(1);
+          return false;
+        });
+        $('.fristPage').click(function() {
+          search(1);
+          return false;
+        });
+        $('.lastPage').click(function() {
+          search((displayStart > 1 ? displayStart - 1 : 1));
+          return false;
+        });
+        $('.nextPage').click(function() {
+          search((displayStart < endPage ? displayStart + 1 : endPage));
+          return false;
+        });
+        $('.endPage').click(function() {
+          search(endPage);
+          return false;
+        })
+        form.on('submit(changeBtn)', function() {
+          var data = form.val('change');
+          data.startTime = new Date(data.startTime).getTime();
+          data.endTime = new Date(data.endTime).getTime();
+          $.ajax({
+            url: url + '/donation-project/saveOrUpdate',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(res) {
+              layer.alert(res.msg, {
+                end: function() {
+                  layer.closeAll();
+                  search();
+                }
+              });
+            }
+          })
+          return false;
+        });
+      })
+
+      function selectAll() {
+        $('input[type=checkbox]').each(function() {
+          this.checked = $("#select")[0].checked
+        })
+      }
+
+      function edit(index) {
+        layer.open({
+          type: 1,
+          skin: 'layui-layer-rim',
+          area: ['500px', '500px'],
+          title: '修改受捐项目',
+          content: `
+            <form class="layui-form" action="" lay-filter="change">
+              <div style="width: fit-content; margin: 10px auto;">
+                <input type="text" name="id" style="display: none;">
+                <div class="layui-form-item">
+                  <div class="layui-block">
+                    <label class="layui-form-label">项目名称：</label>
+                    <input type="text" name="projectName" lay-verify="required" autocomplete="" class="layui-input" style="width: 14em;"
+                      placeholder="请输入受捐项目名称">
+                  </div>
+                </div>
+                <div class="layui-form-item">
+                  <div class="layui-block">
+                    <label class="layui-form-label">项目简介：</label>
+                    <div class="layui-input-block" style="width: 24em !important;">
+                      <textarea placeholder="请输入项目简介" class="layui-textarea" name="projectDesc" lay-verify="required" maxlength="255"></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div class="layui-form-item">
+                  <div class="layui-block">
+                    <label class="layui-form-label">受捐单位：</label>
+                    <div class="layui-input-block" style="width: 14em !important;">
+                      <select name="companyId" id="companyId" lay-verify="required" lay-filter="company" lay-search="">
+                        <option value="">搜索或选择受捐单位</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="layui-form-item">
+                  <div class="layui-block">
+                    <label class="layui-form-label">负责人：</label>
+                    <input type="text" name="projectLeader" lay-verify="required" autocomplete="" class="layui-input" style="width: 14em;"
+                      placeholder="请输入负责人姓名">
+                  </div>
+                </div>
+                <div class="layui-form-item">
+                  <label class="layui-form-label">开始时间：</label>
+                  <div class="layui-input-block" style="width: 8em !important;">
+                    <input type="text" id="startTime" name="startTime" lay-verify="date" placeholder="yyyy-MM-dd" autocomplete="off"
+                      class="layui-input" lay-verify="required">
+                  </div>
+                </div>
+                <div class="layui-form-item">
+                  <label class="layui-form-label">结束时间：</label>
+                  <div class="layui-input-block" style="width: 8em !important;">
+                    <input type="text" id="endTime" name="endTime" lay-verify="date" placeholder="yyyy-MM-dd" autocomplete="off"
+                      class="layui-input" lay-verify="required">
+                  </div>
+                </div>
+                <input type="button" class="layui-btn" value="确认修改" lay-submit="" lay-filter="changeBtn" style="margin: 20px auto 0;display: block;">
+              </div>
+            </form>
+          `,
+          success: function() {
+            $.ajax({
+              url: url + '/company-info/getAllCompanyName',
+              success: function(res) {
+                if (res.code == 200) {
+                  console.log(res.data)
+                  var companyId = null;
+                  for (var i = 0; i < res.data.length; i++) {
+                    $("#companyId").append("<option value='" + res.data[i].id + "'>" + res.data[i].companyName +
+                      "</option>");
+                    console.log(list[index].companyName == res.data[i].companyName )
+                    if( list[index].companyName == res.data[i].companyName ) companyId = res.data[i].id
+                  }
+                  console.log(companyId)
+                  form.val('change', {
+                    companyId: companyId
+                  })
+                  form.render();
+                }
+              }
+            })
+            form.val('change', list[index])
+            laydate.render({
+              elem: '#startTime',
+              value: list[index].startTime.split('T')[0]
+            });
+            laydate.render({
+              elem: '#endTime',
+              value: list[index].endTime.split('T')[0]
+            });
+          }
+        });
+      }
+
+      function changeInfo() {
+        $.ajax({
+          url: url + '/user/changePassword',
+          method: 'POST',
+          contentType: 'application/json',
+          async: false,
+          data: JSON.stringify({
+            password: $("#oldPsw").val(),
+            newPassword: $("#newPsw1").val(),
+            id: 1
+          }),
+          success: function(res) {
+            if (res.code == 200) {
+              layer.alert('修改成功', {
+                end: function() {
+                  layer.closeAll();
+                }
+              })
+            } else {
+              layer.alert(res.msg)
+            }
+          }
+        })
+      }
+
+      function deleteProject(index) {
+        var list = [];
+
+        if (!index) {
+          $('input[type=checkbox]').each(function() {
+            if (this.checked && this.alt) list.push(this.alt);
+          })
+        } else list.push(index);
+        $.ajax({
+          url: url + '/donation-project/deleteByIds',
+          method: 'DELETE',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            ids: list
+          }),
+          success: function(res) {
+            layer.msg(res.msg)
+            if (res.code == 200) search();
+          }
+        })
+      }
+
+      function search(index) {
+        if (!index) var index = displayStart;
+        var data = form.val('data');
+        data.displayStart = index;
+        $.ajax({
+          url: url + '/donation-project/list',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(data),
+          success: function(res) {
+            $('tbody').empty();
+            displayStart = res.data.current;
+            endPage = res.data.pages;
+            list = res.data.records;
+            for (var i = 0; i < res.data.records.length; i++) {
+              $('tbody').append(
+                "<tr><td><input type='checkbox' alt='" + res.data.records[i].id + "' /></td><td>" + res.data.records[
+                  i].id +
+                "</td><td class='organizeName'>" + res.data.records[i].projectName +
+                "</td><td>" + projectStatus(res.data.records[i].projectStatus) + "</td><td>" + res.data.records[
+                  i].projectLeader + "</td><td>" +
+                res.data.records[i].companyName + "</td><td>" + res.data.records[i].startTime.replace('T', ' ') +
+                "</td><td>" + res.data.records[i].endTime.replace('T', ' ') +
+                "</td><td class='operation'><span class='edit' onclick='edit(" +
+                i + ")'>编辑</span>　<span onclick='deleteProject(" + res.data.records[i]
+                .id + ")'>删除</span></td></tr>"
+              );
+            }
+            $('#page').html(displayStart)
+          }
+        })
+      }
+    </script>
+  </body>
+</html>

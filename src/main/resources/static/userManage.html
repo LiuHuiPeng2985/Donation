@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>查看单位</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="css/layuiAdminTheme.css" />
+    <style type="text/css">
+      .layui-form-label {
+        width: auto !important;
+      }
+
+      .operation span:last-of-type {
+        color: #F5222D;
+      }
+
+      .pageNav {
+        margin: 0 auto;
+        width: fit-content;
+      }
+
+      .pageNav a,
+      .operation span {
+        cursor: pointer;
+        display: inline-block;
+      }
+
+      cite {
+        cursor: default;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="js/main.js" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery" charset="utf-8"></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+
+    <form class="layui-form" action="" lay-filter="data">
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">搜索：</label>
+          <input type="text" name="username" class="layui-input" style="width: 8em;" placeholder="用户姓名" value="">
+        </div>
+        <div class="layui-inline">
+          <input type="text" name="email" class="layui-input" style="width: 10em;" placeholder="邮箱" value="">
+        </div>
+        <div class="layui-inline">
+          <input type="text" name="telephone" class="layui-input" style="width: 8em;" placeholder="手机号" value="">
+        </div>
+        <div class="layui-inline">
+          <input type="text" name="displayLength" class="layui-input" style="display: none;" placeholder="每页页数" value="10">
+          <button type="submit" class="layui-btn" lay-submit="" lay-filter="searchBtn">搜索用户</button>
+        </div>
+      </div>
+    </form>
+
+    <table class="layui-table" lay-skin="line">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>姓名</th>
+          <th>性别</th>
+          <th>年龄</th>
+          <th>省市</th>
+          <th>地址</th>
+          <th>邮箱</th>
+          <th>手机号</th>
+          <th>注册时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div style="display: flex;">
+      <div style="flex: 1">
+        <div class="pageNav">
+          <span class="layui-breadcrumb" lay-separator="-">
+            <a class="fristPage">首页</a>
+            <a class="lastPage">上一页</a>
+            <a><cite>第<span id="page"></span>页</cite></a>
+            <a class="nextPage">下一页</a>
+            <a class="endPage">尾页</a>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      var displayStart = 1;
+      var endPage = null;
+      var layer = layui.layer;
+      var form = null;
+      var list = null;
+
+      layui.use(['form', 'element'], function() {
+        form = layui.form;
+
+        search(1);
+
+        form.on('submit(searchBtn)', function() {
+          search(1);
+          return false;
+        });
+        $('.fristPage').click(function() {
+          search(1);
+          return false;
+        });
+        $('.lastPage').click(function() {
+          search((displayStart > 1 ? displayStart - 1 : 1));
+          return false;
+        });
+        $('.nextPage').click(function() {
+          search((displayStart < endPage ? displayStart + 1 : endPage));
+          return false;
+        });
+        $('.endPage').click(function() {
+          search(endPage);
+          return false;
+        })
+      })
+
+      function deleteUser(index) {
+        if (!index) return false;
+        $.ajax({
+          url: url + '/user/delete/' + index,
+          method: 'DELETE',
+          success: function(res) {
+            layer.msg(res.msg)
+            if (res.code == 200) search();
+          }
+        })
+      }
+
+      function search(index) {
+        if (!index) var index = displayStart;
+        var data = form.val('data');
+        data.displayStart = index;
+        $.ajax({
+          url: url + '/user/list',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(data),
+          success: function(res) {
+            $('tbody').empty();
+            displayStart = res.data.current;
+            endPage = res.data.pages;
+            list = res.data.records;
+            for (var i = 0; i < res.data.records.length; i++) {
+              $('tbody').append(
+                "<tr><td>" + res.data.records[i].id + "</td><td>" + res.data.records[i].username +
+                "</td><td>" + (res.data.records[i].sex == '1' ? '男' : '女') + "</td><td>" +
+                res.data.records[i].age + "</td><td>" + res.data.records[i].province + ' ' +
+                res.data.records[i].city + "</td><td>" + res.data.records[i].local + "</td><td>" +
+                res.data.records[i].email + "</td><td>" +
+                res.data.records[i].telephone + "</td><td>" + res.data.records[i].createTime
+                .replace('T', ' ') + "</td><td class='operation'><span onclick='deleteUser(" +
+                res.data.records[i].id + ")'>删除</span></td></tr>"
+              );
+            }
+            $('#page').html(displayStart)
+          }
+        })
+      }
+    </script>
+  </body>
+</html>

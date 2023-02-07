@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>用户信息</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="css/layuiTheme.css" />
+    <style type="text/css">
+      .layui-input-inline {
+        width: auto !important;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="js/main.js" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery" charset="utf-8"></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+    <script src="js/addressSelect.js" charset="utf-8"></script>
+
+    <div style="width: fit-content; margin: 10vh auto 0;">
+      <form class="layui-form" action="" lay-filter="data">
+        <div class="layui-form-item">
+          <label class="layui-form-label">密码：</label>
+          <input type="button" class="layui-btn" value="修改密码" onclick="showChangePsw()">
+        </div>
+        <form class="layui-form" action="" lay-filter="data">
+
+          <div class="layui-form-item">
+            <div class="layui-input-inline">
+              <label class="layui-form-label">姓名：</label>
+              <div class="layui-input-block">
+                <input type="text" name="username" lay-verify="required|name" autocomplete="off" class="layui-input"
+                  style="width: 6em;" placeholder="仅限中文" lay-verType='tips' readonly="">
+              </div>
+            </div>
+            <div class="layui-input-inline">
+              <label class="layui-form-label">性别：</label>
+              <div class="layui-input-block" style="width: 6em !important;">
+                <select name="sex">
+                  <option value="1">男</option>
+                  <option value="0">女</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-input-inline">
+              <label class="layui-form-label">年龄：</label>
+              <div class="layui-input-block">
+                <input type="text" name="age" lay-verify="required|number" autocomplete="off" class="layui-input" style="width: 3em;"
+                  lay-verType='tips'>
+              </div>
+            </div>
+            <div class="layui-input-inline">
+              <label class="layui-form-label">邮箱：</label>
+              <div class="layui-input-block">
+                <input type="text" name="email" lay-verify="email|required" autocomplete="off" class="layui-input"
+                  style="width: 10em;" placeholder="请输入邮箱" lay-verType='tips'>
+              </div>
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <div class="layui-inline">
+              <label class="layui-form-label">住址：</label>
+              <div class="layui-input-inline" style="width: 7em !important;">
+                <select name="province" id="province" lay-verify="required" lay-search lay-filter="province"
+                  lay-verType='tips'>
+                  <option value="">选择省份</option>
+                </select>
+              </div>
+              <div class="layui-input-inline" style="width: 11em !important;">
+                <select name="city" id="city">
+                  <option value="">请先选择省份</option>
+                </select>
+              </div>
+            </div>
+            <div class="layui-input-block">
+              <textarea placeholder="请输入详细地址" class="layui-textarea" name="local" lay-verify="required" style="height: 54px;min-height: 0;"
+                lay-verType='tips'></textarea>
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-block">
+              <label class="layui-form-label">手机号：</label>
+              <div class="layui-input-inline">
+                <input type="text" name="telephone" lay-verify="required|phone" autocomplete="off" class="layui-input"
+                  placeholder="请输入手机号" lay-verType='tips'>
+              </div>
+            </div>
+          </div>
+          <div class="layui-form-item" style="text-align: center;">
+            <div class="layui-input-block" style="margin-left: 0;">
+              <button id="submit" type="submit" class="layui-btn" lay-submit="" lay-filter="change">点击修改</button>
+            </div>
+          </div>
+        </form>
+    </div>
+    </div>
+
+    </div>
+
+    <script type="text/javascript">
+      for (var i = 0; i < addressSelect.length; i++) {
+        $("#province").append("<option value='" + i + "'>" + addressSelect[i].name + "</option>");
+      }
+      layui.use('form', function() {
+        var form = layui.form;
+
+        // 获取用户信息并填充到页面
+        $.ajax({
+          url: url + '/user/getUserInfoById/'+sessionStorage.getItem('userId'),
+          contentType: 'application/json',
+          async: false,
+          success: function(res) {
+            for (var i = 0; i < addressSelect.length; i++) {
+              if (addressSelect[i].name == res.data.province) {
+                res.data.province = i;
+                break;
+              }
+            }
+            for (var i = 0; i < addressSelect[res.data.province].city.length; i++) {
+              $("#city").append("<option value='" + i + "'>" + addressSelect[res.data.province].city[i].name +
+                "</option>");
+            }
+            for (var i = 0; i < addressSelect[res.data.province].city.length; i++) {
+              if (addressSelect[res.data.province].city[i].name == res.data.city) {
+                res.data.city = i;
+                break;
+              }
+            }
+            form.val("data", res.data);
+            $("input[type='text']").each(function() {
+              $(this).addClass('layui-disabled');
+              $(this).attr("disabled", true);
+            });
+            $("textarea").each(function() {
+              $(this).addClass('layui-disabled');
+              $(this).attr("disabled", true);
+            });
+            $("select").each(function() {
+              $(this).attr("disabled", true);
+            });
+            form.render();
+          }
+        })
+
+        form.verify({
+          name: [
+            /^[\u4e00-\u9fa5]{0,}$/,
+            '姓名只能为中文字符'
+          ],
+          psw: [
+            /^[\S]{6,16}$/,
+            '密码必须6到16位，且不能出现空格'
+          ],
+          verifyPsw: function(value) {
+            if (value != $("#psw").val()) return '两次密码不一致'
+          }
+        });
+
+        form.on('select(province)', function(data) {
+          if (data.value.length < 1) return false;
+          $("#city").empty();
+          for (var i = 0; i < addressSelect[data.value].city.length; i++) {
+            $("#city").append("<option value='" + i + "'>" + addressSelect[data.value].city[i].name +
+              "</option>");
+          }
+          form.render('select');
+        });
+
+        form.on('submit(change)', function(data) {
+          if ($(".layui-btn").eq(1).html() == '点击修改') {
+            $("input[type='text']").each(function() {
+              $(this).removeClass('layui-disabled');
+              $(this).removeAttr("disabled");
+            });
+            $("textarea").each(function() {
+              $(this).removeClass('layui-disabled');
+              $(this).removeAttr("disabled");
+            });
+            $("select").each(function() {
+              $(this).removeAttr("disabled");
+            });
+            form.render();
+            $(".layui-btn").eq(1).html('确认修改');
+            return false;
+          }
+          console.log("校验通过，准备提交");
+          var data = form.val("data");
+          console.log(data);
+          data.city = addressSelect[data.province].city[data.city].name;
+          data.province = addressSelect[data.province].name;
+          data.id = sessionStorage.getItem('userId');
+          $.ajax({
+            url: url + '/user/update',
+            method: 'POST',
+            contentType: 'application/json',
+            async: false,
+            data: JSON.stringify(data),
+            success: function(res) {
+              console.log(res);
+              if (res.code == 200) {
+                parent.layer.alert('修改成功', {
+                  end: function(){
+                    location.reload();
+                  }
+                });
+              }
+            }
+          })
+          return false;
+        })
+      })
+
+      function showChangePsw() {
+        parent.layer.open({
+          type: 1,
+          skin: 'layui-layer-rim',
+          area: ['420px', '280px'],
+          title: '修改密码',
+          content: `
+              <div style="width: fit-content; margin: 10px auto;">
+                <label class="layui-form-label">原密码：</label>
+                <input type="password" id="oldPsw" placeholder="输入原密码" class="layui-input" style="width: 8em !important;">
+                
+                <label class="layui-form-label" style="margin: 10px 0;">新密码：</label>
+                <input type="password" id="newPsw1" placeholder="输入新密码" class="layui-input" style="margin: 10px 0; width: 8em !important;">
+                
+                <label class="layui-form-label">确认密码：</label>
+                <input type="password" id="newPsw2" placeholder="确认新密码" class="layui-input" style="width: 8em !important;">
+                
+                <input type="button" class="layui-btn" value="确认修改" onclick="changePsw()" style="margin: 20px auto 0;display: block;">
+              </div>
+          `
+        });
+      }
+      
+    </script>
+  </body>
+</html>

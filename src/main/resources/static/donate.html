@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>立即捐献</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="css/layuiTheme.css" />
+    <style type="text/css">
+      .layui-input-inline {
+        width: auto !important;
+      }
+
+      .layui-row {
+        text-align: center;
+        padding-bottom: 10px;
+        flex: 1;
+      }
+
+      .layui-row input {
+        margin: 0 auto;
+      }
+
+      .row,
+      .title {
+        display: flex;
+        padding: 5px 0;
+      }
+
+      .row>div:first-of-type,
+      .row>div:last-of-type,
+      .title>div:first-of-type,
+      .title>div:last-of-type {
+        width: 2em;
+        text-align: center;
+        line-height: 38px;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .row>div:last-of-type,
+      .title>div:last-of-type {
+        margin-left: 2.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="js/main.js" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery" charset="utf-8"></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+
+    <form class="layui-form" action="" lay-filter="data">
+      <div style="width: fit-content;margin: 5vh auto 0;">
+
+        <div class="layui-form-item">
+          <div class="layui-block">
+            <label class="layui-form-label">受捐单位：</label>
+            <div class="layui-input-block" style="width: 14em !important;">
+              <select name="organize" id="organize" lay-verify="required" lay-filter="organize" lay-search="">
+                <option value="">搜索或选择受捐单位</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <div class="layui-block">
+            <label class="layui-form-label">受捐项目：</label>
+            <div class="layui-input-block" style="width: 14em !important;">
+              <select name="projectId" id="project" lay-verify="required" lay-filter="project" lay-search="">
+                <option value="">请先选择受捐单位</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="desc"></div>
+        <div class="layui-form-item">
+          <div class="layui-block">
+            <label class="layui-form-label">捐赠者：</label>
+            <input type="text" name="donor" lay-verify="required" autocomplete="off" class="layui-input" style="width: 14em;"
+              placeholder="捐赠单位名称或捐赠人姓名">
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <div class="layui-block">
+            <label class="layui-form-label">捐赠方式：</label>
+            <div class="layui-input-block" style="width: 10em !important;">
+              <select name="type" id="type" lay-verify="required" lay-filter="type">
+                <option value="">请选择捐赠方式</option>
+                <option value="1">现金</option>
+                <option value="0">物资</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 15px; border-bottom: 2px dashed #ededed;"></div>
+
+        <div class="layui-fluid" style="padding: 0;"></div>
+
+        <div class="layui-form-item" style="text-align: center;">
+          <div class="layui-block" style="margin-left: 0;">
+            <button type="submit" class="layui-btn" lay-submit="">提交申请</button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <script type="text/javascript">
+      var listLength = 0;
+      var list = null;
+
+      layui.use(['layer', 'form'], function() {
+        var layer = layui.layer;
+        var form = layui.form;
+
+        $.ajax({
+          url: url + '/company-info/getAllCompanyName',
+          success: function(res) {
+            if (res.code == 200) {
+              for (var i = 0; i < res.data.length; i++) {
+                $("#organize").append("<option value='" + res.data[i].id + "'>" + res.data[i].companyName +
+                  "</option>");
+              }
+              form.render('select');
+            }
+          }
+        })
+
+        form.on('select(organize)', function(data) {
+          $('#desc').empty();
+          if (data.value.length < 1) return false;
+          $.ajax({
+            url: url + '/donation-project/queryByCompanyId/' + data.value,
+            success: function(res) {
+              if (res.code == 200) {
+                list = res.data;
+                $("#project").empty();
+                $("#project").append("<option value=''>搜索或选择受捐项目</option>")
+                for (var i = 0; i < res.data.length; i++) {
+                  $("#project").append("<option value='" + res.data[i].id + "'>" + res.data[i].projectName +
+                    "</option>");
+                }
+                form.render('select');
+              }
+            }
+          })
+        });
+        form.on('select(project)', function(data) {
+          $('#desc').empty();
+          if (data.value == '') return false;
+          var i = 0;
+          for (; i < list.length; i++) {
+            if (list[i].id == data.value) break;
+          }
+          $('#desc').html(
+            `<div class="layui-form-item"><div class="layui-block"><label class="layui-form-label">项目简介：</label>
+            <div class="layui-inline layui-form-mid" style="max-width: 28em;">` +
+            list[i].projectDesc + `</div></div></div>`);
+        });
+        form.on('select(type)', function(data) {
+          $('.layui-fluid').empty();
+          listLength = 0
+          if (data.value == 0) {
+            $('.layui-fluid').append(
+              `
+              <div class="title">  <div> </div>
+                <div class="layui-row">
+                  <div class="layui-col-xs3">物品名称</div>
+                  <div class="layui-col-xs3">捐赠数量</div>
+                  <div class="layui-col-xs3">生产标准</div>
+                  <div class="layui-col-xs3">供应厂家</div>
+                </div>
+              <div> </div>  </div>
+            `
+            )
+            addLine();
+          } else if (data.value == 1) {
+            $('.layui-fluid').append(
+              `
+              <div class="layui-form-item">
+              	<div class="layui-inline" style="margin: 0 auto;">
+              		<label class="layui-form-label">捐赠金额：</label>
+              		<input type="text" name="amount" lay-verify="num|required" autocomplete="off" class="layui-input" style="width: 10em;"
+              		 placeholder="请输入捐献金额">
+              	</div>
+              </div>
+              <div class="layui-form-item">
+              	<div class="layui-inline" style="margin: 0 auto;">
+              		<label class="layui-form-label">币种：</label>
+              		<div class="layui-input-block" style="width: 7em !important;">
+              			<select name="currency" lay-verify="required">
+              				<option value="">选择币种</option>
+              				<option value="人名币">人名币</option>
+              				<option value="美元">美元</option>
+              				<option value="欧元">欧元</option>
+              				<option value="日元">日元</option>
+              				<option value="韩元">韩元</option>
+              				<option value="英镑">英镑</option>
+              				<option value="港币">港币</option>
+              				<option value="法郎">法郎</option>
+              			</select>
+              		</div>
+              	</div>
+              </div>
+            `
+            )
+            form.render('select')
+          }
+        });
+        form.on('submit', function() {
+          var data = form.val('data');
+          data.status = '1';
+          data.userId = sessionStorage.getItem('userId');
+          data.itemListVos = [];
+          if (data.type == 0) {
+            for (var i = 0; i < $("input[name='itemName']").length; i++) {
+              data.itemListVos.push({
+                itemName: $("input[name='itemName']").eq(i).val(),
+                itemAmount: $("input[name='itemAmount']").eq(i).val(),
+                supplier: $("input[name='supplier']").eq(i).val(),
+                standard: $("input[name='standard']").eq(i).val()
+              })
+            }
+          } else {
+            data.itemListVos.push({
+              currency: data.currency,
+              amount: data.amount
+            })
+          }
+          $.ajax({
+            url: url + '/donation-info/donate',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(res) {
+              parent.layer.msg(res.msg);
+              if (res.code == 200) location.reload();
+            }
+          });
+          return false;
+        });
+      })
+
+      function deleteLine() {
+        $('.layui-fluid .row:last-of-type').remove();
+        $('.layui-fluid .row:last-of-type').remove();
+        $(".layui-fluid .row:last-of-type>div:last-of-type").append(
+          `
+            <span onclick="deleteLine()">删除</span>
+          `);
+        $(".layui-fluid").append(
+          `
+            <div class="row">
+              <div onclick="addLine()">增加</div>
+              <div class="layui-row"></div>
+              <div></div>
+            </div>
+          `
+        );
+        listLength--;
+        if (listLength == 0) addLine();
+      };
+
+      function addLine() {
+        listLength++;
+        $('.layui-fluid .row:last-of-type').remove();
+        $('.layui-fluid .row:last-of-type>div:last-of-type').empty();
+        $(".layui-fluid").append(`
+            <div class="row">
+              <div>` + listLength +
+          `</div>
+              <div class="layui-row layui-col-space30">
+                <div class="layui-col-xs3">
+                  <input type="text" name="itemName" lay-verify="required" autocomplete="off" class="layui-input" style="width: 10em;"
+                    placeholder="请输入捐献物名称">
+                </div>
+                <div class="layui-col-xs3">
+                  <input type="text" name="itemAmount" lay-verify="num|required" autocomplete="off" class="layui-input" style="width: 9em;"
+                    placeholder="请输入捐献数量">
+                </div>
+                <div class="layui-col-xs3">
+                  <input type="text" name="standard" lay-verify="required" autocomplete="off" class="layui-input" style="width: 11em;"
+                    placeholder="请输入生产标准编号">
+                </div>
+                <div class="layui-col-xs3">
+                  <input type="text" name="supplier" lay-verify="required" autocomplete="off" class="layui-input" style="width: 12em;"
+                    placeholder="请输入捐献物生产厂家">
+                </div>
+              </div>
+              <div><span onclick="deleteLine()">删除</span></div>
+            </div>
+            <div class="row">
+              <div onclick="addLine()">增加</div>
+              <div class="layui-row"></div>
+              <div></div>
+            </div>
+          `
+        );
+      };
+    </script>
+  </body>
+</html>
